@@ -47,7 +47,7 @@ config_after_install() {
 }
 
 service_start(){
-  /usr/local/x-ui/x-ui
+  nohup /usr/local/x-ui/x-ui >/dev/null 2>&1 &
 }
 
 service_stop(){
@@ -122,7 +122,6 @@ install_x-ui() {
     echo -e "x-ui stop         - 停止 x-ui 面板"
     echo -e "x-ui restart      - 重启 x-ui 面板"
     echo -e "x-ui status       - 查看 x-ui 状态"
-    echo -e "x-ui log          - 查看 x-ui 日志"
     echo -e "x-ui update       - 更新 x-ui 面板"
     echo -e "x-ui install      - 安装 x-ui 面板"
     echo -e "x-ui uninstall    - 卸载 x-ui 面板"
