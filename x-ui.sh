@@ -23,6 +23,21 @@ function LOGI() {
 # check os
 release="ubuntu"
 
+service_start(){
+  /usr/local/x-ui/x-ui
+}
+
+service_stop(){
+  ps -ef | grep x-ui | awk '{print $2}' | xargs kill -9
+}
+
+service_reload(){
+  service_stop
+  sleep 2
+  service_start
+}
+
+
 confirm() {
     if [[ $# > 1 ]]; then
         echo && read -p "$1 [默认$2]: " temp
@@ -89,12 +104,12 @@ uninstall() {
         return 0
     fi
     # systemctl stop x-ui
-	service x-ui stop
+	  service_stop
     #systemctl disable x-ui
 	
-    rm /etc/systemd/system/x-ui.service -f
+    #rm /etc/systemd/system/x-ui.service -f
     #systemctl daemon-reload
-	service x-ui reload
+
 	
     #systemctl reset-failed
 	
@@ -164,7 +179,7 @@ start() {
         LOGI "面板已运行，无需再次启动，如需重启请选择重启"
     else
         #systemctl start x-ui
-		service x-ui start
+		    service_start
         sleep 2
         check_status
         if [[ $? == 0 ]]; then
@@ -186,7 +201,7 @@ stop() {
         LOGI "面板已停止，无需再次停止"
     else
         #systemctl stop x-ui
-		service x-ui stop
+		    service_stop
         sleep 2
         check_status
         if [[ $? == 1 ]]; then
@@ -203,7 +218,7 @@ stop() {
 
 restart() {
     #systemctl restart x-ui
-	service x-ui restart
+    service_reload
     sleep 2
     check_status
     if [[ $? == 0 ]]; then
@@ -217,29 +232,13 @@ restart() {
 }
 
 status() {
-    #systemctl status x-ui -l
-	service x-ui status
-    if [[ $# == 0 ]]; then
-        before_show_menu
-    fi
+    before_show_menu
 }
-
-
-show_log() {
-    journalctl -u x-ui.service -e --no-pager -f
-    if [[ $# == 0 ]]; then
-        before_show_menu
-    fi
-}
-
 
 # 0: running, 1: not running, 2: not installed
 check_status() {
-    if [[ ! -f /etc/systemd/system/x-ui.service ]]; then
-        return 2
-    fi
-    temp=$(service  x-ui status | grep Active | awk '{print $3}' | cut -d "(" -f2 | cut -d ")" -f1)
-    if [[ x"${temp}" == x"running" ]]; then
+    temp=$(ps -ef | grep x-ui | awk '{print $2}' | wc -l)
+    if [[ x"${temp}" == x"2" ]]; then
         return 0
     else
         return 1
@@ -393,7 +392,6 @@ show_usage() {
     echo "x-ui stop         - 停止 x-ui 面板"
     echo "x-ui restart      - 重启 x-ui 面板"
     echo "x-ui status       - 查看 x-ui 状态"
-    echo "x-ui log          - 查看 x-ui 日志"
     echo "x-ui update       - 更新 x-ui 面板"
     echo "x-ui install      - 安装 x-ui 面板"
     echo "x-ui uninstall    - 卸载 x-ui 面板"
@@ -418,12 +416,11 @@ show_menu() {
   ${green}9.${plain} 停止 x-ui
   ${green}10.${plain} 重启 x-ui
   ${green}11.${plain} 查看 x-ui 状态
-  ${green}12.${plain} 查看 x-ui 日志
 ————————————————
-  ${green}13.${plain} 一键申请SSL证书(acme申请)
+  ${green}12.${plain} 一键申请SSL证书(acme申请)
  "
     show_status
-    echo && read -p "请输入选择 [0-13]: " num
+    echo && read -p "请输入选择 [0-12]: " num
 
     case "${num}" in
     0)
@@ -463,9 +460,6 @@ show_menu() {
         check_install && status
         ;;
     12)
-        check_install && show_log
-        ;;
-    13)
         ssl_cert_issue
         ;;
     *)
@@ -487,9 +481,6 @@ if [[ $# > 0 ]]; then
         ;;
     "status")
         check_install 0 && status 0
-        ;;
-    "log")
-        check_install 0 && show_log 0
         ;;
     "update")
         check_install 0 && update 0
