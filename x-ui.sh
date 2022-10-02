@@ -237,7 +237,7 @@ status() {
 
 # 0: running, 1: not running, 2: not installed
 check_status() {
-	  if [[ ! -f /usr/local/x-ui/x-ui ]]; then
+    if [[ ! -f /usr/local/x-ui/x-ui ]]; then
         return 2
     fi
 
