@@ -24,7 +24,7 @@ function LOGI() {
 release="ubuntu"
 
 service_start(){
-  /usr/local/x-ui/x-ui
+  nohup /usr/local/x-ui/x-ui >/dev/null 2>&1 &
 }
 
 service_stop(){
