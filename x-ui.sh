@@ -237,8 +237,12 @@ status() {
 
 # 0: running, 1: not running, 2: not installed
 check_status() {
+	  if [[ ! -f /usr/local/x-ui/x-ui ]]; then
+        return 2
+    fi
+
     temp=$(ps -ef | grep x-ui | awk '{print $2}' | wc -l)
-    if [[ x"${temp}" == x"2" ]]; then
+    if [ $temp -eq 2 ]; then
         return 0
     else
         return 1
