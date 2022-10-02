@@ -11,67 +11,11 @@ cur_dir=$(pwd)
 [[ $EUID -ne 0 ]] && echo -e "${red}错误：${plain} 必须使用root用户运行此脚本！\n" && exit 1
 
 # check os
-if [[ -f /etc/redhat-release ]]; then
-    release="centos"
-elif cat /etc/issue | grep -Eqi "debian"; then
-    release="debian"
-elif cat /etc/issue | grep -Eqi "ubuntu"; then
-    release="ubuntu"
-elif cat /etc/issue | grep -Eqi "centos|red hat|redhat"; then
-    release="centos"
-elif cat /proc/version | grep -Eqi "debian"; then
-    release="debian"
-elif cat /proc/version | grep -Eqi "ubuntu"; then
-    release="ubuntu"
-elif cat /proc/version | grep -Eqi "centos|red hat|redhat"; then
-    release="centos"
-else
-    echo -e "${red}未检测到系统版本，请联系脚本作者！${plain}\n" && exit 1
-fi
+release="ubuntu"
 
-arch=$(arch)
-
-if [[ $arch == "x86_64" || $arch == "x64" || $arch == "amd64" ]]; then
-    arch="amd64"
-elif [[ $arch == "aarch64" || $arch == "arm64" ]]; then
-    arch="arm64"
-elif [[ $arch == "s390x" ]]; then
-    arch="s390x"
-else
-    arch="amd64"
-    echo -e "${red}检测架构失败，使用默认架构: ${arch}${plain}"
-fi
+arch="amd64"
 
 echo "架构: ${arch}"
-
-if [ $(getconf WORD_BIT) != '32' ] && [ $(getconf LONG_BIT) != '64' ]; then
-    echo "本软件不支持 32 位系统(x86)，请使用 64 位系统(x86_64)，如果检测有误，请联系作者"
-    exit -1
-fi
-
-os_version=""
-
-# os version
-if [[ -f /etc/os-release ]]; then
-    os_version=$(awk -F'[= ."]' '/VERSION_ID/{print $3}' /etc/os-release)
-fi
-if [[ -z "$os_version" && -f /etc/lsb-release ]]; then
-    os_version=$(awk -F'[= ."]+' '/DISTRIB_RELEASE/{print $2}' /etc/lsb-release)
-fi
-
-if [[ x"${release}" == x"centos" ]]; then
-    if [[ ${os_version} -le 6 ]]; then
-        echo -e "${red}请使用 CentOS 7 或更高版本的系统！${plain}\n" && exit 1
-    fi
-elif [[ x"${release}" == x"ubuntu" ]]; then
-    if [[ ${os_version} -lt 16 ]]; then
-        echo -e "${red}请使用 Ubuntu 16 或更高版本的系统！${plain}\n" && exit 1
-    fi
-elif [[ x"${release}" == x"debian" ]]; then
-    if [[ ${os_version} -lt 8 ]]; then
-        echo -e "${red}请使用 Debian 8 或更高版本的系统！${plain}\n" && exit 1
-    fi
-fi
 
 install_base() {
     if [[ x"${release}" == x"centos" ]]; then
@@ -103,7 +47,8 @@ config_after_install() {
 }
 
 install_x-ui() {
-    systemctl stop x-ui
+    #systemctl stop x-ui
+	service x-ui stop
     cd /usr/local/
 
     if [ $# == 0 ]; then
@@ -138,7 +83,7 @@ install_x-ui() {
     cd x-ui
     chmod +x x-ui bin/xray-linux-${arch}
     cp -f x-ui.service /etc/systemd/system/
-    wget --no-check-certificate -O /usr/bin/x-ui https://raw.githubusercontent.com/vaxilu/x-ui/main/x-ui.sh
+    wget --no-check-certificate -O /usr/bin/x-ui https://raw.githubusercontent.com/fangxingweiai/x-ui/main/x-ui.sh
     chmod +x /usr/local/x-ui/x-ui.sh
     chmod +x /usr/bin/x-ui
     config_after_install
@@ -148,9 +93,12 @@ install_x-ui() {
     #echo -e ""
     #echo -e "如果是更新面板，则按你之前的方式访问面板"
     #echo -e ""
-    systemctl daemon-reload
-    systemctl enable x-ui
-    systemctl start x-ui
+    #systemctl daemon-reload
+	service x-ui reload
+    #systemctl enable x-ui
+	
+    #systemctl start x-ui===
+	service x-ui start
     echo -e "${green}x-ui v${last_version}${plain} 安装完成，面板已启动，"
     echo -e ""
     echo -e "x-ui 管理脚本使用方法: "
@@ -160,10 +108,7 @@ install_x-ui() {
     echo -e "x-ui stop         - 停止 x-ui 面板"
     echo -e "x-ui restart      - 重启 x-ui 面板"
     echo -e "x-ui status       - 查看 x-ui 状态"
-    echo -e "x-ui enable       - 设置 x-ui 开机自启"
-    echo -e "x-ui disable      - 取消 x-ui 开机自启"
     echo -e "x-ui log          - 查看 x-ui 日志"
-    echo -e "x-ui v2-ui        - 迁移本机器的 v2-ui 账号数据至 x-ui"
     echo -e "x-ui update       - 更新 x-ui 面板"
     echo -e "x-ui install      - 安装 x-ui 面板"
     echo -e "x-ui uninstall    - 卸载 x-ui 面板"
